@@ -15,7 +15,7 @@ st.divider()
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 # 여기에 사용 중인 구글 스프레드시트의 전체 URL을 입력하세요.
-SHEET_URL = "https://docs.google.com/spreadsheets/d/12G7u0kwszplju89"
+SHEET_URL = "https://docs.google.com/spreadsheets/d/12G7u0kwszplju89Qkj4MI_0O9X7H2F8u-Tb9DEB6-yY/edit?gid=0#gid=0"
 
 try:
     # 데이터 읽어오기 (image_bcd6e1.png의 구조를 반영)
