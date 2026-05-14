@@ -4,57 +4,60 @@ import plotly.express as px
 from streamlit_gsheets import GSheetsConnection
 
 # 1. 페이지 설정
-st.set_page_config(page_title="KGC 통합 마케팅 분석", layout="wide")
-st.title("📊 정관장 에브리타임 밸런스 실시간 리포트")
+st.set_page_config(page_title="KGC 실시간 마케팅 대시보드", layout="wide")
 
-# 2. 구글 스프레드시트 연결
+st.title("🚀 정관장 에브리타임 밸런스 성과 대시보드")
+st.markdown("### 구글 스프레드시트 데이터 실시간 연동 중")
+st.divider()
+
+# 2. 구글 스프레드시트 연결 및 데이터 로드
+# Secrets에 설정된 정보를 바탕으로 연결합니다.
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-# [수정] 주소를 가장 깔끔한 형태(ID 중심)로 변경했습니다.
-# 뒤의 ?gid=0 같은 부분은 라이브러리가 알아서 처리하도록 뺐습니다.
+# 여기에 사용 중인 구글 스프레드시트의 전체 URL을 입력하세요.
 SHEET_URL = "https://docs.google.com/spreadsheets/d/12G7u0kwszplju89Qkj4MI_0O9X7H2F8u-Tb9DEB6-yY/edit"
 
-def load_data():
-    try:
-        # 각 시트를 개별적으로 읽어옵니다.
-        df_kpi = conn.read(spreadsheet=SHEET_URL, worksheet="KPI", ttl=0)
-        df_region = conn.read(spreadsheet=SHEET_URL, worksheet="지역", ttl=0)
-        df_age = conn.read(spreadsheet=SHEET_URL, worksheet="연령", ttl=0)
-        return df_kpi, df_region, df_age
-    except Exception as e:
-        # [중요] 에러의 진짜 내용을 화면에 출력합니다. 
-        # 이를 통해 권한 문제인지, 시트 이름 문제인지 알 수 있습니다.
-        st.error(f"❌ 데이터 로드 중 실제 에러 발생: {e}")
-        st.info("💡 팁: 구글 시트 우측 상단 [공유] 버튼에서 서비스 계정 이메일이 '뷰어'로 등록되어 있는지 꼭 확인하세요.")
-        st.stop()
+try:
+    # 데이터 읽어오기 (image_bcd6e1.png의 구조를 반영)
+    # ttl=0은 테스트를 위해 캐시를 사용하지 않고 즉시 새로고침한다는 의미입니다.
+    df = conn.read(spreadsheet=SHEET_URL, ttl=0)
 
-# 데이터 불러오기
-df_kpi, df_region, df_age = load_data()
+    # 3. 핵심 지표 (KPI Metrics) - 시트의 데이터를 순서대로 매핑
+    col1, col2, col3, col4 = st.columns(4)
+    
+    # 각 컬럼에 시트의 0~3행 데이터를 배치합니다.
+    with col1:
+        st.metric(label=df.iloc[0]['label'], value=df.iloc[0]['value'], delta=df.iloc[0]['delta'])
+    with col2:
+        # 퍼센트 형식(30.00%)이 문자열로 들어올 경우를 대비해 그대로 표시합니다.
+        st.metric(label=df.iloc[1]['label'], value=df.iloc[1]['value'], delta=df.iloc[1]['delta'])
+    with col3:
+        st.metric(label=df.iloc[2]['label'], value=df.iloc[2]['value'], delta=df.iloc[2]['delta'])
+    with col4:
+        st.metric(label=df.iloc[3]['label'], value=df.iloc[3]['value'], delta=df.iloc[3]['delta'])
 
-# --- 이후 탭 구성 코드는 이전과 동일하게 유지합니다 ---
-tab1, tab2, tab3 = st.tabs(["📈 핵심 지표(KPI)", "🗺️ 지역별 성장률", "👥 연령대별 비중"])
+except Exception as e:
+    st.error(f"데이터를 불러오는 중 오류가 발생했습니다: {e}")
+    st.info("구글 시트의 공유 설정과 서비스 계정 권한을 다시 확인해주세요.")
 
-with tab1:
-    st.subheader("주요 성과 지표")
-    k_cols = st.columns(4)
-    for i in range(min(len(df_kpi), 4)):
-        with k_cols[i]:
-            st.metric(label=df_kpi.iloc[i]['label'], value=df_kpi.iloc[i]['value'], delta=df_kpi.iloc[i]['delta'])
-    st.divider()
-    st.info("🤖 **AI 마케팅 요약**")
-    if len(df_kpi) >= 6:
-        st.write(df_kpi.iloc[5, 0])
+st.divider()
 
-with tab2:
-    st.subheader("지역 및 채널별 성장률 분석")
-    col_l, col_r = st.columns([2, 1])
-    with col_l:
-        fig = px.bar(df_region, x="지역", y="성장률", color="지역", text_auto=True)
-        st.plotly_chart(fig, use_container_width=True)
+# 4. 분석 가설 및 차트 (기존 로직 유지 또는 데이터 기반 확장)
+st.subheader("💡 데이터 기반 마케팅 인사이트")
+c1, c2 = st.columns(2)
 
-with tab3:
-    st.subheader("구매 고객 연령대 분포")
-    col_l, col_r = st.columns([1, 1])
-    with col_l:
-        fig_p = px.pie(df_age, values="비중", names="연령대", hole=0.4)
-        st.plotly_chart(fig_p, use_container_width=True)
+with c1:
+    st.info("**지역별 성과 분석 가설**")
+    st.write("- 수도권 판매량 지표가 **" + str(df.iloc[0]['value']) + "**로 나타남에 따라 편의점 채널의 지배력 확인.")
+    st.write("- 지방 대형마트의 정체 원인을 규명하기 위한 추가 샘플링 조사 필요.")
+
+with c2:
+    st.success("**아웃도어 트렌드 결합**")
+    st.write(f"- {df.iloc[2]['label']} 지표가 {df.iloc[2]['value']} 수준으로 상승.")
+    st.write("- 등산 및 테니스 동호회를 타겟으로 한 앰배서더 마케팅 강화 제언.")
+
+# 5. 하단 액션 플랜 체크리스트
+st.divider()
+st.subheader("🎯 향후 추진 과제")
+st.checkbox("가격 저항선 완화를 위한 2030 전용 구독 서비스 검토", value=True)
+st.checkbox("패키지 개봉 편의성 개선을 위한 샘플 테스트 진행")
