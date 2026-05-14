@@ -34,7 +34,7 @@ with col_left:
     
     # 2단계에서 복사해둔 스프레드시트 URL을 넣으세요.
     # ttl=600은 10분(600초)마다 최신 데이터를 가져오라는 뜻입니다.
-    sheet_url = https://docs.google.com/spreadsheets/d/12G7u0kwszplju89Qkj4MI_0O9X7H2F8u-Tb9DEB6-yY/edit?gid=0#gid=0
+    sheet_url = "https://docs.google.com/spreadsheets/d/12G7u0kwszplju89Qkj4MI_0O9X7H2F8u-Tb9DEB6-yY/edit?gid=0#gid=0"
     sales_data = conn.read(spreadsheet=sheet_url, ttl=600)
     # -----------------------------------------------
 
