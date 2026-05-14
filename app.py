@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
+from streamlit_gsheets import GSheetsConnection  # 구글 시트 연결 라이브러리 추가
 
 # 1. 페이지 설정 및 디자인
 st.set_page_config(page_title="마케팅 전략 대시보드", layout="wide")
@@ -28,30 +28,21 @@ st.subheader("📍 지역별/채널별 판매 실적 비교")
 col_left, col_right = st.columns([2, 1])
 
 with col_left:
-    # 데이터 생성
-    sales_data = pd.DataFrame({
-        "지역": ["수도권(편의점)", "지방(대형마트)"],
-        "증감률(%)": [15, -2]
-    })
+    # --- 변경된 부분: 구글 시트에서 데이터 읽어오기 ---
+    # Streamlit 금고(Secrets)를 통해 구글 시트와 연결
+    conn = st.connection("gsheets", type=GSheetsConnection)
+    
+    # 2단계에서 복사해둔 스프레드시트 URL을 넣으세요.
+    # ttl=600은 10분(600초)마다 최신 데이터를 가져오라는 뜻입니다.
+    sheet_url = https://docs.google.com/spreadsheets/d/12G7u0kwszplju89Qkj4MI_0O9X7H2F8u-Tb9DEB6-yY/edit?gid=0#gid=0
+    sales_data = conn.read(spreadsheet=sheet_url, ttl=600)
+    # -----------------------------------------------
+
+    # 읽어온 데이터(sales_data)를 바탕으로 차트 그리기
     fig = px.bar(sales_data, x="지역", y="증감률(%)", color="지역", 
                  text_auto=True, title="전주 대비 판매 증감률",
                  color_discrete_map={"수도권(편의점)": "#EF553B", "지방(대형마트)": "#636EFA"})
     st.plotly_chart(fig, use_container_width=True)
-
-with col_right:
-    st.info("💡 **실적 격차 가설 (추정 원인)**")
-    with st.expander("수도권 편의점 강세 이유"):
-        st.write("""
-        - **라이프스타일 점유:** 2030 사회초년생의 '갓생' 트렌드와 편의점 접근성 결합.
-        - **디자인 효과:** 리뉴얼 패키지가 젊은 층의 즉흥적 구매 유도.
-        """)
-    with st.expander("지방 대형마트 정체 이유"):
-        st.write("""
-        - **타겟 불일치:** 마트 주 고객(4050)은 '부드러운 맛'보다 '고함량' 선호 가능성.
-        - **인지도 전이 지연:** 신규 리뉴얼 메시지의 지방 확산 속도 차이.
-        """)
-
-st.divider()
 
 # 4. 고객 리뷰 및 키워드 분석
 st.subheader("💬 고객 보이스 및 키워드 트렌드")
