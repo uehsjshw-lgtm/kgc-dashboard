@@ -10,7 +10,7 @@ st.title("📊 정관장 에브리타임 밸런스 실시간 리포트")
 # 2. 구글 스프레드시트 연결
 conn = st.connection("gsheets", type=GSheetsConnection)
 # 본인의 실제 스프레드시트 URL을 따옴표 안에 넣으세요.
-SHEET_URL = "https://docs.google.com/spreadsheets/d/12G7u0kwszplju89Qkj4MI_0O9X7H2F8u-Tb9DEB6-yY"
+SHEET_URL = "https://docs.google.com/spreadsheets/d/12G7u0kwszplju89Qkj4MI_0O9X7H2F8u-Tb9DEB6-yY/edit?gid=0#gid=0"
 
 # 데이터를 안전하게 로드하기 위한 함수
 def load_data():
