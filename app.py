@@ -1,78 +1,63 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from streamlit_gsheets import GSheetsConnection  # 구글 시트 연결 라이브러리 추가
+from streamlit_gsheets import GSheetsConnection
 
-# 1. 페이지 설정 및 디자인
-st.set_page_config(page_title="마케팅 전략 대시보드", layout="wide")
+# 1. 페이지 설정
+st.set_page_config(page_title="KGC 실시간 마케팅 대시보드", layout="wide")
 
-st.title("🚀 정관장 에브리타임 밸런스 리뉴얼 성과 분석")
-st.markdown("### 2026년 3월 4주차 | 마케팅 가설 및 데이터 인사이트")
+st.title("🚀 정관장 에브리타임 밸런스 성과 대시보드")
+st.markdown("### 구글 스프레드시트 데이터 실시간 연동 중")
 st.divider()
 
-# 2. 핵심 지표 (KPI Metrics)
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    st.metric(label="전체 판매량 추이", value="+13%", delta="수도권 강세")
-with col2:
-    st.metric(label="2030 구매 비중", value="45%", delta="주력 타겟층")
-with col3:
-    st.metric(label="아웃도어 키워드 언급", value="+30%", delta="등산/테니스")
-with col4:
-    st.metric(label="리뷰 긍정률", value="78%", delta="맛/디자인 만족")
+# 2. 구글 스프레드시트 연결 및 데이터 로드
+# Secrets에 설정된 정보를 바탕으로 연결합니다.
+conn = st.connection("gsheets", type=GSheetsConnection)
 
-st.divider()
+# 여기에 사용 중인 구글 스프레드시트의 전체 URL을 입력하세요.
+SHEET_URL = "https://docs.google.com/spreadsheets/d/12G7u0kwszplju89"
 
-# 3. 판매 실적 분석 (Chart & Hypotheses)
-st.subheader("📍 지역별/채널별 판매 실적 비교")
-col_left, col_right = st.columns([2, 1])
+try:
+    # 데이터 읽어오기 (image_bcd6e1.png의 구조를 반영)
+    # ttl=0은 테스트를 위해 캐시를 사용하지 않고 즉시 새로고침한다는 의미입니다.
+    df = conn.read(spreadsheet=SHEET_URL, ttl=0)
 
-with col_left:
-    # --- 변경된 부분: 구글 시트에서 데이터 읽어오기 ---
-    # Streamlit 금고(Secrets)를 통해 구글 시트와 연결
-    conn = st.connection("gsheets", type=GSheetsConnection)
+    # 3. 핵심 지표 (KPI Metrics) - 시트의 데이터를 순서대로 매핑
+    col1, col2, col3, col4 = st.columns(4)
     
-    # 2단계에서 복사해둔 스프레드시트 URL을 넣으세요.
-    # ttl=600은 10분(600초)마다 최신 데이터를 가져오라는 뜻입니다.
-    sheet_url = "https://docs.google.com/spreadsheets/d/12G7u0kwszplju89Qkj4MI_0O9X7H2F8u-Tb9DEB6-yY/edit?gid=0#gid=0"
-    sales_data = conn.read(spreadsheet=sheet_url, ttl=600)
-    # -----------------------------------------------
+    # 각 컬럼에 시트의 0~3행 데이터를 배치합니다.
+    with col1:
+        st.metric(label=df.iloc[0]['label'], value=df.iloc[0]['value'], delta=df.iloc[0]['delta'])
+    with col2:
+        # 퍼센트 형식(30.00%)이 문자열로 들어올 경우를 대비해 그대로 표시합니다.
+        st.metric(label=df.iloc[1]['label'], value=df.iloc[1]['value'], delta=df.iloc[1]['delta'])
+    with col3:
+        st.metric(label=df.iloc[2]['label'], value=df.iloc[2]['value'], delta=df.iloc[2]['delta'])
+    with col4:
+        st.metric(label=df.iloc[3]['label'], value=df.iloc[3]['value'], delta=df.iloc[3]['delta'])
 
-    # 읽어온 데이터(sales_data)를 바탕으로 차트 그리기
-    fig = px.bar(sales_data, x="지역", y="증감률(%)", color="지역", 
-                 text_auto=True, title="전주 대비 판매 증감률",
-                 color_discrete_map={"수도권(편의점)": "#EF553B", "지방(대형마트)": "#636EFA"})
-    st.plotly_chart(fig, use_container_width=True)
+except Exception as e:
+    st.error(f"데이터를 불러오는 중 오류가 발생했습니다: {e}")
+    st.info("구글 시트의 공유 설정과 서비스 계정 권한을 다시 확인해주세요.")
 
-# 4. 고객 리뷰 및 키워드 분석
-st.subheader("💬 고객 보이스 및 키워드 트렌드")
-col_rev1, col_rev2 = st.columns(2)
-
-with col_rev1:
-    # 감성 분석 차트
-    sentiment_data = pd.DataFrame({
-        "구분": ["긍정(맛/디자인)", "부정(가격/개봉)", "중립"],
-        "비중": [70, 20, 10]
-    })
-    fig_pie = px.pie(sentiment_data, values="비중", names="구분", title="고객 리뷰 감성 분포",
-                     color_discrete_sequence=px.colors.sequential.RdBu)
-    st.plotly_chart(fig_pie, use_container_width=True)
-
-with col_rev2:
-    st.warning("⚠️ **주요 리스크 가설 (추정 원인)**")
-    st.markdown("""
-    *   **가격 체감도:** 리뉴얼 후 할인 프로모션 축소로 인한 민감도 상승 추정.
-    *   **패키지 이슈:** 신규 지질 또는 코팅 방식이 개봉 시 마찰력을 높였을 가능성.
-    """)
-    st.success("🎾 **기회 요인: 아웃도어 트렌드**")
-    st.write("등산/테니스 키워드 30% 증가 → '운동 전 에너지 부스팅' 아이템으로 인식 확산 중.")
-
-# 5. 전략 제언 액션 플랜
 st.divider()
-st.subheader("🎯 베테랑 마케터의 전략 제언")
-st.checkbox("수도권: 테니스장/등산로 인근 편의점 '오운완' 팝업 매대 설치")
-st.checkbox("지방: 대형마트 내 '쓴맛 완화' 강조 시음 행사 및 가족 패키지 강화")
-st.checkbox("QC: 패키지 개봉선(Perforation) 기술 보완 검토 요청")
 
-st.sidebar.title("설정")
-st.sidebar.info("본 대시보드는 가설 중심의 초안입니다. 실제 원인 파악 후 데이터를 업데이트하세요.")
+# 4. 분석 가설 및 차트 (기존 로직 유지 또는 데이터 기반 확장)
+st.subheader("💡 데이터 기반 마케팅 인사이트")
+c1, c2 = st.columns(2)
+
+with c1:
+    st.info("**지역별 성과 분석 가설**")
+    st.write("- 수도권 판매량 지표가 **" + str(df.iloc[0]['value']) + "**로 나타남에 따라 편의점 채널의 지배력 확인.")
+    st.write("- 지방 대형마트의 정체 원인을 규명하기 위한 추가 샘플링 조사 필요.")
+
+with c2:
+    st.success("**아웃도어 트렌드 결합**")
+    st.write(f"- {df.iloc[2]['label']} 지표가 {df.iloc[2]['value']} 수준으로 상승.")
+    st.write("- 등산 및 테니스 동호회를 타겟으로 한 앰배서더 마케팅 강화 제언.")
+
+# 5. 하단 액션 플랜 체크리스트
+st.divider()
+st.subheader("🎯 향후 추진 과제")
+st.checkbox("가격 저항선 완화를 위한 2030 전용 구독 서비스 검토", value=True)
+st.checkbox("패키지 개봉 편의성 개선을 위한 샘플 테스트 진행")
