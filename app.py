@@ -9,7 +9,7 @@ st.title("📊 정관장 에브리타임 밸런스 실시간 리포트")
 
 # 2. 구글 스프레드시트 연결
 conn = st.connection("gsheets", type=GSheetsConnection)
-SHEET_URL = "실제_구글_스프레드시트_URL을_여기에_입력하세요"
+SHEET_URL = "https://docs.google.com/spreadsheets/d/12G7u0kwszplju89Qkj4MI_0O9X7H2F8u-Tb9DEB6-yY/edit?gid=0#gid=0"
 
 # 각 시트(Worksheet)별 데이터 로드
 try:
